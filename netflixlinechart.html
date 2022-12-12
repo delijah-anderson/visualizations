@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Netflix - Line Chart</title>
+    <script src="https://d3js.org/d3.v3.min.js"></script>
+    <style>
+        text {
+            font-family: Arial;
+            font-size: 20px;
+        }
+
+        .axis path, .axis line {
+            fill: none;
+            stroke: black;
+            shape-rendering: crispEdges;
+        }
+
+        .tick text {
+            fill: black;
+            font-size: 11px;
+        }
+
+        rect {
+            stroke: white;
+        }
+    </style>
+</head>
+<body>
+
+<svg id="main" width="600" height="600">
+    <text id='label' x='20' y='20'>R-Rated Netflix Movies by Date Added</text>
+    <g transform="translate(30,40)"></g>
+</svg>
+
+
+<script>
+
+    var CHART_WIDTH = 400;
+    var CHART_HEIGHT = 220;
+
+    var MAX_BAR_HEIGHT = 207;
+
+    var dateAdded = [];
+
+    function drawLineChart() {
+        var maxValue = d3.max(dateAdded), xScale = d3.scale.linear(), yScale = d3.scale.linear();
+        xScale.domain([2012, 2021]).range([0, CHART_WIDTH]), yScale.domain([0, 220]).range([CHART_HEIGHT, 0]);
+        var pathGenerator = d3.svg.line().x(function (e) {
+                return xScale(e.year)
+            }).y(function (e) {
+                return yScale(e.added)
+            }), g = d3.select("svg").select("g"),
+            xAxis = d3.svg.axis().scale(xScale).orient("bottom").tickFormat(function (e) {
+                return "" + e
+            }), yAxis = d3.svg.axis().scale(yScale).orient("left");
+        g.append("g").attr("class", "axis").attr("transform", "translate(0," + CHART_HEIGHT + ")").call(xAxis), g.append("g").attr("class", "axis").call(yAxis), g.append("path").style("fill", "none").style("stroke", "steelblue").style("stroke-width", "3px").attr("d", pathGenerator(dateAdded));
+
+    }
+
+
+    d3.csv('netflix.csv', function (data) {
+        for (var i = 0; i < data.length; i++) {
+            var record = data[i];
+
+            // loop through all years, from 2012 to 2021
+            for (var y = 2012; y <= 2021; y++) {
+                var value = record[y];
+                var object = {
+                    year: y,
+                    added: +value
+                };
+
+                dateAdded.push(object);
+            }
+        }
+        drawLineChart();
+
+    });
+
+</script>
+</body>
+
+
+</html>
