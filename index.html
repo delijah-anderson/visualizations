@@ -1,12 +1,126 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>N328 Final Project</title>
-  <link href="styling.css">
+    <title>N328 Project</title>
+    <link href="styling.css">
+    <link href="netflixlinechart.html">
+    <script src="https://d3js.org/d3.v3.min.js"></script>
+    <style>
+        text {
+            font-family: Arial;
+            font-size: 20px;
+        }
+
+        .axis path, .axis line {
+            fill: none;
+            stroke: black;
+            shape-rendering: crispEdges;
+        }
+
+        .tick text {
+            fill: black;
+            font-size: 11px;
+        }
+
+        rect {
+            stroke: white;
+        }
+    </style>
 </head>
 <body>
-<h1>Netflix Movies</h1>
-<p>Visualizations</p>
+
+<svg id="main" width="600" height="600">
+    <text id='label' x='20' y='20'>R-Rated Netflix Movies by Date Added</text>
+    <g transform="translate(30,40)"></g>
+</svg>
+
+
+<script>
+
+    var CHART_WIDTH = 400;
+    var CHART_HEIGHT = 220;
+
+    var MAX_BAR_HEIGHT = 207;
+
+    var Netflixdataset = [];
+
+    function drawScatterPlot() {
+        var maxValue = d3.max(Netflixdataset), xScale = d3.scale.linear(), yScale = d3.scale.linear();
+        xScale.domain([2012, 2021]).range([0, CHART_WIDTH]), yScale.domain([0, 220]).range([CHART_HEIGHT, 0]);
+        var pathGenerator = d3.svg.line().x(function (e) {
+                return xScale(e.year)
+            }).y(function (e) {
+                return yScale(e.number)
+            }), g = d3.select("svg").select("g"),
+            xAxis = d3.svg.axis().scale(xScale).orient("bottom").tickFormat(function (e) {
+                return "" + e
+            }), yAxis = d3.svg.axis().scale(yScale).orient("left");
+        g.append("g").attr("class", "axis")
+            .attr("transform", "translate(0," + CHART_HEIGHT + ")")
+            .attr('text-anchor', 'middle')
+            .style('font-weight', 'bold')
+            .html('Year Added')
+            .call(xAxis),
+            g.append("g").attr("class", "axis")
+                .attr('text-anchor', 'middle')
+                .style('font-weight', 'bold')
+                .html('No. of Movies')
+                .call(yAxis),
+            g.selectAll("circle")
+                .data(Netflixdataset).enter()
+                .append("circle")
+                .style("fill", "dodgerblue")
+                .attr("r", 5)
+                .attr("cx", function (e) {
+                    return xScale(e.year)
+                }).attr("cy", function (e) {
+                return yScale(e.number)
+            })
+                .attr('id', function (e) {
+                    return 'left_' + e.id;
+                });
+        ;
+
+        // Add interaction events
+        g.selectAll('circle')
+            .on('mouseover', function (e) {
+                d3.select("#left_" + e.id)
+                    .style('fill', 'lightgreen')
+                    .attr('r', '10px')
+
+                // move brushed circle so that it's on top
+                this.parentNode.appendChild(this);
+            })
+
+            .on('mouseout', function (e) {
+                d3.select("#left_" + e.id)
+                    .style('fill', null)
+                    .attr('r', '6px');
+            })
+
+    }
+
+    d3.csv('netflix.csv', function (data) {
+        for (var i = 0; i < data.length; i++) {
+            var record = data[i];
+
+            // loop through all years, from 2012 to 2021
+            for (var y = 2012; y <= 2021; y++) {
+                var value = record[y];
+                var object = {
+                    year: y,
+                    number: +value
+                };
+
+                Netflixdataset.push(object);
+            }
+        }
+        drawScatterPlot();
+
+    });
+
+</script>
 </body>
+
+
 </html>
